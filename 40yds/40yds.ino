@@ -3,7 +3,15 @@
 const int echoPin = 7; //PINO DIGITAL UTILIZADO PELO HC-SR04 ECHO(RECEBE)
 const int trigPin = 6; //PINO DIGITAL UTILIZADO PELO HC-SR04 TRIG(ENVIA)
 int teste=0;
+int contagem=0;
+int inicio=0;
 int distancia=300;
+float tempoInicial=0;
+float tempoFinal=0;
+float resultado=0;
+int led1=3;
+int led2=4;
+int led3=5;
 
 Ultrasonic ultrasonic(trigPin,echoPin); //INICIALIZANDO OS PINOS DO ARDUINO
 
@@ -11,6 +19,14 @@ int dist; //VARIÁVEL DO TIPO INTEIRO
 String result; //VARIÁVEL DO TIPO STRING
 
 void setup(){
+  
+  pinMode(led1, OUTPUT);
+  digitalWrite(led1, LOW);
+  pinMode(led2, OUTPUT);
+  digitalWrite(led2, LOW);
+  pinMode(led3, OUTPUT);
+  digitalWrite(led3, LOW);
+  
   pinMode(echoPin, INPUT); //DEFINE O PINO COMO ENTRADA (RECEBE)
   pinMode(trigPin, OUTPUT); //DEFINE O PINO COMO SAIDA (ENVIA)
   Serial.begin(9600); //INICIALIZA A PORTA SERIAL
@@ -25,18 +41,61 @@ void loop(){
   
   while(teste<10){
     Serial.println("Iniciando...");
-    teste++;
-    delay(500);
-  }
-  while(teste>9){
     hcsr04();
     distancia=result.toInt();
-    if(distancia<100){
-      Serial.println("Pronto pra iniciar");
-    }else{
-      Serial.println("Alinhar para iniciar");
-    }
+    teste++;
+    digitalWrite(led1, HIGH);
+    digitalWrite(led2, HIGH);
+    digitalWrite(led3, HIGH);
+    delay(500);
+  }
+  while(teste==10){
     
+    while(inicio==0){
+      digitalWrite(led3, LOW);
+      hcsr04();
+      distancia=result.toInt();
+      if(distancia<30){
+        Serial.println("Alinhado");
+        digitalWrite(led1, LOW);
+        digitalWrite(led2, HIGH);
+        
+        contagem++; 
+      }else{
+        Serial.println("Alinhar para iniciar");
+        digitalWrite(led1, HIGH);
+        digitalWrite(led2, LOW);
+        contagem=0;
+      }
+      if(contagem>10){
+        inicio=1;
+      }
+    delay(200);  
+    break;  
+    }
+    while(inicio==1){
+      hcsr04();
+      distancia=result.toInt();
+      if(distancia<30){
+        digitalWrite(led1, LOW);
+        digitalWrite(led2, LOW);
+        digitalWrite(led3, HIGH);
+        Serial.println("Pronto");
+      }
+      if(distancia>100){
+        digitalWrite(led3, LOW);
+        Serial.println("Start!!");
+        tempoInicial=millis();
+        inicio=2;    
+      }
+      break;
+    }
+    while(inicio==2){
+      tempoFinal=millis();
+      resultado=(tempoFinal-tempoInicial)/1000;
+      Serial.println(resultado,3);
+      break;
+    }
   }
 }
 //MÉTODO RESPONSÁVEL POR CALCULAR A DISTÂNCIA
